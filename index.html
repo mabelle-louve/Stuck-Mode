@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stuck Mode</title>
+
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --text: #2e2e2e;
+      --muted: #6f7682;
+      --button: #2e2e2e;
+      --button-text: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    main {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
+      min-height: 320px;
+    }
+
+    section {
+  position: absolute;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  animation-play-state: paused;
+}
+
+    section.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      animation-play-state: running;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    button {
+      padding: 16px;
+      font-size: 1rem;
+      border-radius: 12px;
+      border: none;
+      background: var(--button);
+      color: var(--button-text);
+      cursor: pointer;
+    }
+
+    .secondary {
+      background: transparent;
+      color: var(--muted);
+      padding: 12px;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .choices button {
+      background: #ffffff;
+      color: var(--text);
+      border: 1px solid #ddd;
+    }
+@keyframes breathe {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+}
+    #breath-text {
+  animation: breathe 4s ease-in-out infinite;
+  text-align: center;
+}
+    #screen-breathe {
+  display: flex;
+flex-direction: column;
+gap: 12px;
+  align-items: center;
+  text-align: center;
+}
+    
+  </style>
+</head>
+
+<body>
+  <main>
+
+    <!-- Screen 1: Permission -->
+    <section id="screen-1" class="active">
+      <h1>Feeling stuck is okay.</h1>
+      <p>You don’t have to fix everything right now.</p>
+      <button onclick="goTo(2)">Help me take one small step</button>
+      <button class="secondary" onclick="exitApp()">Not now</button>
+    </section>
+
+    <!-- Screen 2: Type of stuck -->
+    <section id="screen-2">
+      <h1>What kind of stuck?</h1>
+      <div class="choices">
+        <button onclick="choose('overloaded')">My mind feels overloaded</button>
+        <button onclick="choose('low-energy')">I have no energy</button>
+        <button onclick="choose('unsure')">I don’t even know</button>
+      </div>
+    </section>
+
+    <!-- Screen Breathing -->
+    <section id="screen-breathe">
+      <h1 id="breath-text">Inhale</h1>
+        <p>Slow breath.</p>
+    </section>
+    
+    <!-- Screen 3: Gentle step -->
+    <section id="screen-3">
+      <h1 id="step-text"></h1>
+      <p id="step-subtext"></p>
+      <button onclick="goTo(4)">I did it</button>
+    </section>
+
+    <!-- Screen 4: Acknowledgement -->
+    <section id="screen-4">
+      <h1>That was enough.</h1>
+      <p>You can stop here.</p>
+      <button onclick="goTo(5)">Close Stuck Mode</button>
+    </section>
+
+    <!-- Screen 5: Exit -->
+    <section id="screen-5">
+      <h1>Take care.</h1>
+      <p>You’re allowed to rest now.</p>
+      <button onclick="exitApp()">Done</button>
+    </section>
+
+  </main>
+
+  <script>
+  
+    const steps = {
+  overloaded: {
+    text: "Take one slow breath. In... and out.",
+    subtext: "That's enough."
+  },
+  "low-energy": {
+    text: "Sit up and place your feet on the floor.",
+    subtext: "You can stop after this."
+  },
+  unsure: {
+    text: "Take a sip of water.",
+    subtext: "Small things still count."
+  }
+};
+
+    function goTo(screen) {
+
+  document.querySelectorAll("section").forEach(section => {
+    section.classList.remove("active");
+  });
+
+  if (typeof screen === "number") {
+    document.getElementById(`screen-${screen}`).classList.add("active");
+  } else {
+    document.getElementById(`screen-${screen}`).classList.add("active");
+  }
+}
+
+    function choose(type) {
+
+  if (type === "overloaded") {
+    goTo("breathe");
+
+    const breathText = document.getElementById("breath-text");
+
+    breathText.innerText = "Inhale";
+
+    setTimeout(() => {
+      breathText.innerText = "Exhale";
+    }, 2000);
+
+    setTimeout(() => {
+      document.getElementById("step-text").innerText = steps[type].text;
+      document.getElementById("step-subtext").innerText = steps[type].subtext;
+      goTo(3);
+    }, 4000);
+
+  } else {
+    document.getElementById("step-text").innerText = steps[type].text;
+    document.getElementById("step-subtext").innerText = steps[type].subtext;
+    goTo(3);
+  }
+}
+
+    function exitApp() {
+      // Gentle exit: do nothing dramatic
+      document.body.innerHTML = "";
+    }
+  </script>
+</body>
+</html>
