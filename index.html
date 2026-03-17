@@ -38,20 +38,18 @@
     }
 
     section {
-  position: absolute;
-  width: 100%;
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  animation-play-state: paused;
-}
+      position: absolute;
+      width: 100%;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
 
     section.active {
       opacity: 1;
       transform: translateY(0);
       pointer-events: auto;
-      animation-play-state: running;
     }
 
     h1 {
@@ -93,32 +91,39 @@
       color: var(--text);
       border: 1px solid #ddd;
     }
-@keyframes breathe {
-  0% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.15);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-}
+
+    /* Breathing text animation */
+    @keyframes breathe {
+      0%   { transform: scale(1); opacity: 0.8; }
+      50%  { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.8; }
+    }
+
     #breath-text {
-  animation: breathe 4s ease-in-out infinite;
-  text-align: center;
-}
+      animation: breathe 4s ease-in-out infinite;
+      text-align: center;
+    }
+
+    /* Breathing screen container */
     #screen-breathe {
-  display: flex;
-flex-direction: column;
-gap: 12px;
-  align-items: center;
-  text-align: center;
-}
-    
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      text-align: center;
+    }
+
+    /* Subtle background pulse animation */
+    @keyframes breathe-bg {
+      0%   { background-color: #f4f5f7; }
+      50%  { background-color: #e0e4eb; }
+      100% { background-color: #f4f5f7; }
+    }
+
+    #screen-breathe.active {
+      animation: breathe-bg 4s ease-in-out infinite;
+    }
+
   </style>
 </head>
 
@@ -146,9 +151,9 @@ gap: 12px;
     <!-- Screen Breathing -->
     <section id="screen-breathe">
       <h1 id="breath-text">Inhale</h1>
-        <p>Slow breath.</p>
+      <p>Slow breath...</p>
     </section>
-    
+
     <!-- Screen 3: Gentle step -->
     <section id="screen-3">
       <h1 id="step-text"></h1>
@@ -165,7 +170,7 @@ gap: 12px;
 
     <!-- Screen 5: Exit -->
     <section id="screen-5">
-      <h1>Take care.</h1>
+      <h1 id="exit-text">Take care.</h1>
       <p>You’re allowed to rest now.</p>
       <button onclick="exitApp()">Done</button>
     </section>
@@ -173,64 +178,97 @@ gap: 12px;
   </main>
 
   <script>
-  
+    // ---------------- Steps ----------------
     const steps = {
-  overloaded: {
-    text: "Take one slow breath. In... and out.",
-    subtext: "That's enough."
-  },
-  "low-energy": {
-    text: "Sit up and place your feet on the floor.",
-    subtext: "You can stop after this."
-  },
-  unsure: {
-    text: "Take a sip of water.",
-    subtext: "Small things still count."
-  }
-};
+      overloaded: [
+        { text: "Take one slow breath. In... and out.", subtext: "That's enough." },
+        { text: "Close your eyes for a few seconds.", subtext: "You can pause here." },
+        { text: "Stretch your arms slowly.", subtext: "Small movements help." },
+        { text: "Roll your shoulders gently.", subtext: "Notice the tension leaving." },
+        { text: "Place your hand on your chest and breathe.", subtext: "You’re okay." }
+      ],
+      "low-energy": [
+        { text: "Place your feet firmly on the floor.", subtext: "Feel grounded." },
+        { text: "Sit up straight and stretch your back.", subtext: "Just one motion." },
+        { text: "Roll your shoulders slowly.", subtext: "Release tightness." },
+        { text: "Take a few deep breaths.", subtext: "Let air fill your lungs." },
+        { text: "Clench and release your fists a few times.", subtext: "Gentle movement counts." }
+      ],
+      unsure: [
+        { text: "Take a sip of water.", subtext: "Small things still count." },
+        { text: "Look outside for a moment.", subtext: "Notice something small." },
+        { text: "Touch something nearby intentionally.", subtext: "Ground yourself." },
+        { text: "Name three things you can see.", subtext: "Just small observations." },
+        { text: "Take a slow exhale.", subtext: "Let it out gently." }
+      ]
+    };
 
+    // ---------------- Exit Messages ----------------
+    const exitMessages = [
+      "Take care.",
+      "See you soon.",
+      "Rest well.",
+      "You’ve done enough.",
+      "Until next time."
+    ];
+
+    // ---------------- Navigation ----------------
     function goTo(screen) {
+      document.querySelectorAll("section").forEach(section => {
+        section.classList.remove("active");
+      });
 
-  document.querySelectorAll("section").forEach(section => {
-    section.classList.remove("active");
-  });
+      if (typeof screen === "number") {
+        document.getElementById(`screen-${screen}`).classList.add("active");
+      } else {
+        document.getElementById(`screen-${screen}`).classList.add("active");
+      }
+    }
 
-  if (typeof screen === "number") {
-    document.getElementById(`screen-${screen}`).classList.add("active");
-  } else {
-    document.getElementById(`screen-${screen}`).classList.add("active");
-  }
-}
-
+    // ---------------- Choose Step ----------------
     function choose(type) {
+      if (type === "overloaded") {
+        goTo("breathe");
 
-  if (type === "overloaded") {
-    goTo("breathe");
+        const breathText = document.getElementById("breath-text");
+        breathText.innerText = "Inhale";
 
-    const breathText = document.getElementById("breath-text");
+        setTimeout(() => {
+          breathText.innerText = "Exhale";
+        }, 2000);
 
-    breathText.innerText = "Inhale";
+        setTimeout(() => {
+          const step = steps[type][Math.floor(Math.random() * steps[type].length)];
+          document.getElementById("step-text").innerText = step.text;
+          document.getElementById("step-subtext").innerText = step.subtext;
+          goTo(3);
+        }, 4000);
 
-    setTimeout(() => {
-      breathText.innerText = "Exhale";
-    }, 2000);
+      } else {
+        const step = steps[type][Math.floor(Math.random() * steps[type].length)];
+        document.getElementById("step-text").innerText = step.text;
+        document.getElementById("step-subtext").innerText = step.subtext;
+        goTo(3);
+      }
+    }
 
-    setTimeout(() => {
-      document.getElementById("step-text").innerText = steps[type].text;
-      document.getElementById("step-subtext").innerText = steps[type].subtext;
-      goTo(3);
-    }, 4000);
-
-  } else {
-    document.getElementById("step-text").innerText = steps[type].text;
-    document.getElementById("step-subtext").innerText = steps[type].subtext;
-    goTo(3);
-  }
-}
-
+    // ---------------- Exit App ----------------
     function exitApp() {
-      // Gentle exit: do nothing dramatic
-      document.body.innerHTML = "";
+      const message = exitMessages[Math.floor(Math.random() * exitMessages.length)];
+      document.body.innerHTML = `
+        <div style="
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          height:100vh;
+          font-family:system-ui;
+          font-size:1.4rem;
+          text-align:center;
+          padding:16px;
+        ">
+          ${message}
+        </div>
+      `;
     }
   </script>
 </body>
