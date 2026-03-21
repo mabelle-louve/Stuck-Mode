@@ -4,271 +4,618 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Stuck Mode</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg: #f4f5f7;
-      --text: #2e2e2e;
-      --muted: #6f7682;
-      --button: #2e2e2e;
-      --button-text: #ffffff;
+      --bg: #f0ede8;
+      --surface: #faf8f5;
+      --text: #1e1c19;
+      --muted: #9a9188;
+      --accent: #b5886a;
+      --border: rgba(0,0,0,0.08);
+      --shadow: 0 2px 24px rgba(0,0,0,0.06);
     }
 
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
     }
 
     body {
-      margin: 0;
       background: var(--bg);
       color: var(--text);
-      height: 100vh;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
       display: flex;
       justify-content: center;
       align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
     }
 
+    /* Subtle grain texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Ambient orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 0;
+      transition: all 2s ease;
+    }
+    .orb-1 {
+      width: 380px; height: 380px;
+      background: #d4b8a8;
+      top: -100px; right: -80px;
+      animation: drift1 18s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 300px; height: 300px;
+      background: #a8c4b8;
+      bottom: -80px; left: -60px;
+      animation: drift2 22s ease-in-out infinite;
+    }
+
+    @keyframes drift1 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-30px, 40px); }
+    }
+    @keyframes drift2 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(25px, -30px); }
+    }
+
+    /* Card */
     main {
       position: relative;
+      z-index: 1;
       width: 100%;
-      max-width: 420px;
-      padding: 24px;
-      min-height: 320px;
+      max-width: 400px;
+      padding: 20px;
     }
 
-    section {
+    .card {
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: relative;
+      /* Height driven by the active screen */
+      min-height: 380px;
+    }
+
+    /* Screens */
+    .screen {
       position: absolute;
-      width: 100%;
+      inset: 0;
+      padding: 44px 36px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(14px);
       pointer-events: none;
-      transition: opacity 0.6s ease, transform 0.6s ease;
+      transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    section.active {
+    /* Invisible twin of screen-2 — stays in flow to set card height */
+    .screen-sizer {
+      visibility: hidden;
+      pointer-events: none;
+      user-select: none;
+      padding: 44px 36px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .screen.active {
       opacity: 1;
       transform: translateY(0);
-      pointer-events: auto;
+      pointer-events: all;
+    }
+
+    .screen.exit {
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    /* Typography */
+    .eyebrow {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
     }
 
     h1 {
-      font-size: 1.4rem;
-      font-weight: 500;
-      line-height: 1.4;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      font-weight: 300;
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin-bottom: 12px;
     }
 
-    p {
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .sub {
+      font-size: 0.85rem;
       color: var(--muted);
-      line-height: 1.5;
-      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 32px;
     }
 
     button {
-      padding: 16px;
-      font-size: 1rem;
-      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 0.9rem;
       border: none;
-      background: var(--button);
-      color: var(--button-text);
       cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
     }
 
-    .secondary {
+    .btn-primary {
+      background: var(--text);
+      color: #f8f6f2;
+      padding: 15px 20px;
+      border-radius: 12px;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary:hover {
+      background: #2d2a25;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+
+    .btn-ghost {
       background: transparent;
       color: var(--muted);
-      padding: 12px;
+      padding: 12px 4px;
+      font-size: 0.82rem;
     }
 
-    .choices {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .choices button {
-      background: #ffffff;
+    .btn-ghost:hover {
       color: var(--text);
-      border: 1px solid #ddd;
     }
 
-    /* Breathing text animation */
-    @keyframes breathe {
-      0%   { transform: scale(1); opacity: 0.8; }
-      50%  { transform: scale(1.15); opacity: 1; }
-      100% { transform: scale(1); opacity: 0.8; }
-    }
-
-    #breath-text {
-      animation: breathe 6s ease-in-out infinite;
-      text-align: center;
-    }
-
-    /* Breathing screen container */
-    #screen-breathe {
+    .btn-choice {
+      background: var(--bg);
+      color: var(--text);
+      padding: 15px 18px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-choice::after {
+      content: '→';
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: all 0.2s ease;
+      color: var(--accent);
+      font-size: 1rem;
+    }
+
+    .btn-choice:hover {
+      background: #ebe8e2;
+      border-color: rgba(0,0,0,0.12);
+      transform: translateX(2px);
+    }
+
+    .btn-choice:hover::after {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Breathing screen */
+    #screen-breathe {
       align-items: center;
       text-align: center;
+      justify-content: center;
+      gap: 0;
     }
 
-    /* Subtle background pulse animation */
-    @keyframes breathe-bg {
-      0%   { background-color: #f4f5f7; }
-      50%  { background-color: #e0e4eb; }
-      100% { background-color: #f4f5f7; }
+    .breath-ring {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 1.5px solid var(--accent);
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
     }
 
-    #screen-breathe.active {
-      animation: breathe-bg 6s ease-in-out infinite;
+    .breath-ring::before {
+      content: '';
+      position: absolute;
+      inset: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(181,136,106,0.15), transparent);
+      animation: breathe-inner 6s ease-in-out infinite;
+    }
+
+    @keyframes breathe-inner {
+      0%, 100% { transform: scale(0.85); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 1; }
+    }
+
+    .breath-ring-outer {
+      position: absolute;
+      inset: -10px;
+      border-radius: 50%;
+      border: 1px solid rgba(181,136,106,0.25);
+      animation: breathe-outer 6s ease-in-out infinite;
+    }
+
+    @keyframes breathe-outer {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.12); opacity: 0.4; }
+    }
+
+    #breath-word {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 300;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      transition: opacity 0.6s ease;
+    }
+
+    #screen-breathe h1 {
+      font-size: 1.7rem;
+      margin-bottom: 8px;
+    }
+
+    #screen-breathe .sub {
+      font-size: 0.82rem;
+    }
+
+    /* Progress dots */
+    .progress {
+      display: flex;
+      gap: 5px;
+      margin-bottom: 24px;
+    }
+
+    .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .dot.filled {
+      background: var(--accent);
+      transform: scale(1.2);
+    }
+
+    /* Divider line */
+    .divider {
+      width: 32px;
+      height: 1px;
+      background: var(--accent);
+      opacity: 0.4;
+      margin: 20px 0;
+    }
+
+    /* Exit full screen */
+    #exit-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      gap: 12px;
+      animation: fadeIn 0.8s ease forwards;
+    }
+
+    #exit-overlay.show {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    #exit-overlay p {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 300;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    #exit-overlay span {
+      font-size: 0.78rem;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
   </style>
 </head>
 
 <body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
   <main>
+    <div class="card">
 
-    <!-- Screen 1: Permission -->
-    <section id="screen-1" class="active">
-      <h1>Feeling stuck is okay.</h1>
-      <p>You don’t have to fix everything right now.</p>
-      <button onclick="goTo(2)">Help me take one small step</button>
-      <button class="secondary" onclick="exitApp()">Not now</button>
-    </section>
-
-    <!-- Screen 2: Type of stuck -->
-    <section id="screen-2">
-      <h1>What kind of stuck?</h1>
-      <div class="choices">
-        <button onclick="choose('overloaded')">My mind feels overloaded</button>
-        <button onclick="choose('low-energy')">I have no energy</button>
-        <button onclick="choose('unsure')">I don’t even know</button>
+      <!-- Sizer: invisible, sets card height to fit tallest content -->
+      <div class="screen-sizer" aria-hidden="true">
+        <div>
+          <div class="progress"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+          <div class="eyebrow">Check in</div>
+          <h1>What's it like right now?</h1>
+        </div>
+        <div class="btn-group">
+          <button class="btn-choice" tabindex="-1" style="visibility:hidden">My mind feels overloaded</button>
+          <button class="btn-choice" tabindex="-1" style="visibility:hidden">I have no energy</button>
+          <button class="btn-choice" tabindex="-1" style="visibility:hidden">I don't even know</button>
+        </div>
       </div>
-    </section>
 
-    <!-- Screen Breathing -->
-    <section id="screen-breathe">
-      <h1 id="breath-text">Inhale</h1>
-      <p>Slow breath...</p>
-    </section>
+      <!-- Screen 1: Welcome -->
+      <div class="screen active" id="screen-1">
+        <div>
+          <div class="eyebrow">Stuck Mode</div>
+          <h1>It's okay to feel <em>stuck.</em></h1>
+          <div class="divider"></div>
+          <p class="sub">You don't have to fix everything right now. One small step is enough.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn-primary" onclick="goTo(2)">Help me take one small step</button>
+          <button class="btn-ghost" onclick="exitApp('Not today.')">Not right now</button>
+        </div>
+      </div>
 
-    <!-- Screen 3: Gentle step -->
-    <section id="screen-3">
-      <h1 id="step-text"></h1>
-      <p id="step-subtext"></p>
-      <button onclick="goTo(4)">I did it</button>
-    </section>
+      <!-- Screen 2: Type -->
+      <div class="screen" id="screen-2">
+        <div>
+          <div class="progress">
+            <div class="dot filled"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+          <div class="eyebrow">Check in</div>
+          <h1>What's it like right now?</h1>
+        </div>
+        <div class="btn-group">
+          <button class="btn-choice" onclick="choose('overloaded')">My mind feels overloaded</button>
+          <button class="btn-choice" onclick="choose('low-energy')">I have no energy</button>
+          <button class="btn-choice" onclick="choose('unsure')">I don't even know</button>
+        </div>
+      </div>
 
-    <!-- Screen 4: Acknowledgement -->
-    <section id="screen-4">
-      <h1>That was enough.</h1>
-      <p>You can stop here.</p>
-      <button onclick="goTo(5)">Close Stuck Mode</button>
-    </section>
+      <!-- Screen Breathe -->
+      <div class="screen" id="screen-breathe">
+        <div class="progress">
+          <div class="dot filled"></div>
+          <div class="dot filled"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="breath-ring">
+          <div class="breath-ring-outer"></div>
+          <span id="breath-word">inhale</span>
+        </div>
+        <div>
+          <h1>Breathe with this.</h1>
+          <p class="sub">In for 4 seconds. Out for 4 seconds.</p>
+        </div>
+      </div>
 
-    <!-- Screen 5: Exit -->
-    <section id="screen-5">
-      <h1 id="exit-text">Take care.</h1>
-      <p>You’re allowed to rest now.</p>
-      <button onclick="exitApp()">Done</button>
-    </section>
+      <!-- Screen 3: Step -->
+      <div class="screen" id="screen-3">
+        <div>
+          <div class="progress">
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot"></div>
+          </div>
+          <div class="eyebrow">One thing</div>
+          <h1 id="step-text"></h1>
+          <div class="divider"></div>
+          <p class="sub" id="step-subtext"></p>
+        </div>
+        <div class="btn-group">
+          <button class="btn-primary" onclick="goTo(4)">Done</button>
+          <button class="btn-ghost" onclick="newStep()">Give me a different one</button>
+        </div>
+      </div>
 
+      <!-- Screen 4: Acknowledgement -->
+      <div class="screen" id="screen-4">
+        <div>
+          <div class="progress">
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+            <div class="dot filled"></div>
+          </div>
+          <div class="eyebrow">Well done</div>
+          <h1>That was <em>enough.</em></h1>
+          <div class="divider"></div>
+          <p class="sub">Seriously. You showed up for yourself. That's not nothing.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn-primary" onclick="goTo(5)">Finish</button>
+          <button class="btn-ghost" onclick="goTo(2)">Do another step</button>
+        </div>
+      </div>
+
+      <!-- Screen 5: Goodbye -->
+      <div class="screen" id="screen-5">
+        <div>
+          <div class="eyebrow">All done</div>
+          <h1>You're allowed to rest now.</h1>
+          <div class="divider"></div>
+          <p class="sub">Come back whenever you need to. No pressure, no timeline.</p>
+        </div>
+        <div class="btn-group">
+          <button class="btn-primary" onclick="exitApp()">Close</button>
+        </div>
+      </div>
+
+    </div>
   </main>
 
+  <!-- Exit overlay -->
+  <div id="exit-overlay">
+    <p id="exit-message">Take care.</p>
+    <span>See you next time</span>
+  </div>
+
   <script>
-    // ---------------- Steps ----------------
     const steps = {
       overloaded: [
-        { text: "Take one slow breath. In... and out.", subtext: "That's enough." },
-        { text: "Close your eyes for a few seconds.", subtext: "You can pause here." },
-        { text: "Stretch your arms slowly.", subtext: "Small movements help." },
-        { text: "Roll your shoulders gently.", subtext: "Notice the tension leaving." },
-        { text: "Place your hand on your chest and breathe.", subtext: "You’re okay." }
+        { text: "Take one slow breath.", subtext: "In through your nose. Out through your mouth. That's it." },
+        { text: "Close your eyes for ten seconds.", subtext: "Just pause. The world can wait." },
+        { text: "Put your hands flat on a surface.", subtext: "Feel something solid. You're here." },
+        { text: "Roll your shoulders back. Twice.", subtext: "Notice where you're holding tension." },
+        { text: "Name one thing in front of you.", subtext: "Just look at it for a moment." }
       ],
       "low-energy": [
-        { text: "Place your feet firmly on the floor.", subtext: "Feel grounded." },
-        { text: "Sit up straight and stretch your back.", subtext: "Just one motion." },
-        { text: "Roll your shoulders slowly.", subtext: "Release tightness." },
-        { text: "Take a few deep breaths.", subtext: "Let air fill your lungs." },
-        { text: "Clench and release your fists a few times.", subtext: "Gentle movement counts." }
+        { text: "Place your feet flat on the floor.", subtext: "Feel the weight of your body. That's grounding." },
+        { text: "Sit up slowly and stretch your spine.", subtext: "One gentle movement. No rush." },
+        { text: "Take three deeper breaths.", subtext: "Slower than you think you need." },
+        { text: "Clench your hands. Then release.", subtext: "Three times, gently. Wake up your body." },
+        { text: "Drink some water if it's nearby.", subtext: "Small acts of care still count." }
       ],
       unsure: [
-        { text: "Take a sip of water.", subtext: "Small things still count." },
-        { text: "Look outside for a moment.", subtext: "Notice something small." },
-        { text: "Touch something nearby intentionally.", subtext: "Ground yourself." },
-        { text: "Name three things you can see.", subtext: "Just small observations." },
-        { text: "Take a slow exhale.", subtext: "Let it out gently." }
+        { text: "Find something to look at for a moment.", subtext: "Notice one small detail about it." },
+        { text: "Take a slow exhale.", subtext: "Longer than usual. Let it go." },
+        { text: "Touch something nearby, intentionally.", subtext: "Notice its texture. Just for a second." },
+        { text: "Name three things you can see.", subtext: "No analysis. Just notice them." },
+        { text: "Let your shoulders drop.", subtext: "They're probably higher than they need to be." }
       ]
     };
 
-    // ---------------- Exit Messages ----------------
     const exitMessages = [
-      "Take care.",
-      "See you soon.",
+      "Take care of yourself.",
       "Rest well.",
-      "You’ve done enough.",
+      "You've done enough today.",
+      "Be gentle with yourself.",
       "Until next time."
     ];
 
-    // ---------------- Navigation ----------------
-    function goTo(screen) {
-      document.querySelectorAll("section").forEach(section => {
-        section.classList.remove("active");
-      });
+    let currentType = null;
+    let usedSteps = [];
 
-      if (typeof screen === "number") {
-        document.getElementById(`screen-${screen}`).classList.add("active");
-      } else {
-        document.getElementById(`screen-${screen}`).classList.add("active");
-      }
+    function goTo(id) {
+      document.querySelectorAll('.screen').forEach(s => {
+        if (s.classList.contains('active')) {
+          s.classList.add('exit');
+          setTimeout(() => s.classList.remove('active', 'exit'), 400);
+        }
+      });
+      const target = document.getElementById(`screen-${id}`);
+      setTimeout(() => {
+        target.classList.add('active');
+      }, 120);
     }
 
-    // ---------------- Choose Step ----------------
     function choose(type) {
-      if (type === "overloaded") {
-        goTo("breathe");
+      currentType = type;
+      usedSteps = [];
 
-        const breathText = document.getElementById("breath-text");
-        breathText.innerText = "Inhale";
+      if (type === 'overloaded') {
+        goTo('breathe');
 
+        const word = document.getElementById('breath-word');
+        const cycle = () => {
+          word.style.opacity = 0;
+          setTimeout(() => {
+            word.textContent = 'inhale';
+            word.style.opacity = 1;
+          }, 300);
+          setTimeout(() => {
+            word.style.opacity = 0;
+            setTimeout(() => {
+              word.textContent = 'exhale';
+              word.style.opacity = 1;
+            }, 300);
+          }, 4000);
+        };
+
+        cycle();
         setTimeout(() => {
-          breathText.innerText = "Exhale";
-        }, 2000);
-
-        setTimeout(() => {
-          const step = steps[type][Math.floor(Math.random() * steps[type].length)];
-          document.getElementById("step-text").innerText = step.text;
-          document.getElementById("step-subtext").innerText = step.subtext;
+          loadStep(type);
           goTo(3);
-        }, 4000);
+        }, 8500);
 
       } else {
-        const step = steps[type][Math.floor(Math.random() * steps[type].length)];
-        document.getElementById("step-text").innerText = step.text;
-        document.getElementById("step-subtext").innerText = step.subtext;
+        loadStep(type);
         goTo(3);
       }
     }
 
-    // ---------------- Exit App ----------------
-    function exitApp() {
-      const message = exitMessages[Math.floor(Math.random() * exitMessages.length)];
-      document.body.innerHTML = `
-        <div style="
-          display:flex;
-          justify-content:center;
-          align-items:center;
-          height:100vh;
-          font-family:system-ui;
-          font-size:1.4rem;
-          text-align:center;
-          padding:16px;
-        ">
-          ${message}
-        </div>
-      `;
+    function loadStep(type) {
+      const pool = steps[type];
+      const available = pool.filter((_, i) => !usedSteps.includes(i));
+      const sourcePool = available.length ? available : pool;
+      const step = sourcePool[Math.floor(Math.random() * sourcePool.length)];
+      const idx = pool.indexOf(step);
+      usedSteps.push(idx);
+
+      document.getElementById('step-text').textContent = step.text;
+      document.getElementById('step-subtext').textContent = step.subtext;
+    }
+
+    function newStep() {
+      loadStep(currentType);
+    }
+
+    function exitApp(msg) {
+      const overlay = document.getElementById('exit-overlay');
+      const message = msg || exitMessages[Math.floor(Math.random() * exitMessages.length)];
+      document.getElementById('exit-message').textContent = message;
+      overlay.classList.add('show');
     }
   </script>
 </body>
